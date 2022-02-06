@@ -1,21 +1,20 @@
-name: Python application
+name: deploy-py-lambda
 on:
   push:
     branches:
-      - main
+      - master
 jobs:
-  deploy-lambda:
+  build:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-      - uses: aws-actions/setup-sam@v1
-      - uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-2
-      # Build using SAM
-      - run: sam build --use-container --template-file sam-app/template.yaml
-      # Deploy on AWS
-      - run: sam deploy --config-file sam-app/samconfig.toml --no-fail-on-empty-changeset --parameter-overrides ParameterKey=MyParam,ParameterValue=${{ secrets.MyParam }}
+    - uses: actions/checkout@master
+    - name: Deploy code to Lambda
+      uses: mariamrf/py-lambda-action@v1.0.0
+      with:
+        lambda_layer_arn: 'arn:aws:lambda:eu-west-1:534693412730:function:fivetran_harvest'
+        lambda_function_name: 'fivetran_harvest'
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: 'us-east-2'
