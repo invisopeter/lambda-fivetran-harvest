@@ -1,6 +1,6 @@
 import json
 def lambda_handler(request, context):
-
+    print(request);
     # Fetch records using api calls
     (insertTransactions, deleteTransactions, newTransactionCursor) = api_response(request['state'], request['secrets'])
     # Populate records in insert
@@ -39,9 +39,9 @@ def api_response(state, secrets):
     ]
     return (insertTransactions, deleteTransactions, '2018-01-01T00:00:00Z')
 
-#request = {}
-#request['state'] = "state"
-#request['secrets'] = "secret"
+request = {}
+request['state'] = "state"
+request['secrets'] = "secret"
 
-#ref = lambda_handler(request, "context")
+ref = lambda_handler(request, "context")
 #print(ref)
