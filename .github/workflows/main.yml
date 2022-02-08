@@ -12,7 +12,7 @@ jobs:
     - name: Deploy code to Lambda
       uses: mariamrf/py-lambda-action@v1.0.0
       with:
-        lambda_layer_arn: 'arn:aws:lambda:eu-west-1:336392948345:layer:AWSDataWrangler-Python39:1'
+        lambda_layer_arn: 'arn:aws:lambda:eu-west-1:336392948345:layer:AWSDataWrangler-Python39'
         lambda_function_name: 'fivetran_harvest'
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
