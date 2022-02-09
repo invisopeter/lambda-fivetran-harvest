@@ -4,8 +4,6 @@ import pprint
 
 def lambda_handler(request, context):
 
-    print(request)
-
     # Fetch records using api calls
     (insertTransactions, newTransactionCursor) = api_response(request['state'], request['secrets'])
     # Populate records in insert
@@ -30,7 +28,6 @@ def lambda_handler(request, context):
 
 def api_response(state, secrets):
 
-    # your api call goes here
     endpoint = "https://invisodanmark.harvestapp.com/"
     harvest_token ="639717.pt.YhyRXRe9At65SHz0YJNrIEV0yuSVUBfUPpmRGZLKR6XuoAyWFWEnuNlPniiqspwSCfX6EqfuNK80-bGTGinROA"
     headers = {
@@ -43,7 +40,7 @@ def api_response(state, secrets):
 
     payload={}
 
-    url = "https://api.harvestapp.com/v2/projects?updated_since="+request['state']['transactionsCursor']
+    url = "https://api.harvestapp.com/v2/projects?updated_since="+state['transactionsCursor']
     response = requests.request("GET", url, headers=headers, data=payload)
 
     data  = response.json()
@@ -59,13 +56,11 @@ def api_response(state, secrets):
 
     #print(json.dumps(data_content, indent=4, sort_keys=True))
 
-
     insertTransactions = data_content
-
 
     return (insertTransactions, '2018-01-01T00:00:00Z')
 
-#request = {}
-#request['state'] = {'transactionsCursor': '2018-01-01T00:00:00Z'}
-#request['secrets'] = 'secret'
-#ref = lambda_handler(request, "context")
+request = {}
+request['state'] = {'transactionsCursor': '2018-01-01T00:00:00Z'}
+request['secrets'] = 'secret'
+ref = lambda_handler(request, "context")
