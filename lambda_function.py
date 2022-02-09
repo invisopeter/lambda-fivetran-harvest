@@ -78,7 +78,10 @@ def api_response(state, secrets):
     data_content = data["projects"]
     data_next_page = data["next_page"]
 
-    max_updated_at = max(data_content, key=lambda ev: ev['updated_at'])["updated_at"]
+    if data_content:
+        max_updated_at = max(data_content, key=lambda ev: ev['updated_at'])["updated_at"]
+    else:
+        max_updated_at = state["cursor"]
 
     if data_next_page:
         state["page"] = data_next_page
@@ -104,7 +107,7 @@ def api_response(state, secrets):
 
 if os.environ.get("AWS_EXECUTION_ENV") is None:
     request = {}
-    #request['state'] = {'projectsCursor': '2018-01-01T00:00:00Z'}
-    request['state'] = {}
+    request['state'] = {'cursor': '2022-02-08T20:56:27Z'}
+    #request['state'] = {}
     request['secrets'] = 'secret'
     ref = lambda_handler(request, "context")
