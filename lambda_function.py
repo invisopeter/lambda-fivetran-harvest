@@ -1,6 +1,7 @@
 import json
 import requests
 import pprint
+import os
 
 def lambda_handler(request, context):
 
@@ -9,14 +10,17 @@ def lambda_handler(request, context):
     # Fetch records using api calls
     (insertTransactions, newTransactionCursor) = api_response(request['state'], request['secrets'])
     # Populate records in insert
+
     insert = {}
-    insert['transactions'] = insertTransactions
+    insert['projects'] = insertTransactions
     state = {}
-    state['transactionsCursor'] = newTransactionCursor
+    state['projectsCursor'] = newTransactionCursor
+
+    schema = {}
     transactionsSchema = {}
     transactionsSchema['primary_key'] = ['id']
-    schema = {}
-    schema['transactions'] = transactionsSchema
+    schema['projects'] = transactionsSchema
+
     response = {}
     # Add updated state to response
     response['state'] =  state
@@ -26,6 +30,9 @@ def lambda_handler(request, context):
     response['schema'] = schema
     # Add hasMore flag
     response['hasMore'] = 'false'
+
+    #print(json.dumps(response, indent=4, sort_keys=True))
+
     return response
 
 def api_response(state, secrets):
@@ -42,7 +49,7 @@ def api_response(state, secrets):
 
     payload={}
 
-    url = "https://api.harvestapp.com/v2/projects?updated_since="+state['transactionsCursor']
+    url = "https://api.harvestapp.com/v2/projects?updated_since="+state['projectsCursor']
     response = requests.request("GET", url, headers=headers, data=payload)
 
     data  = response.json()
@@ -62,7 +69,8 @@ def api_response(state, secrets):
 
     return (insertTransactions, '2018-01-01T00:00:00Z')
 
-#request = {}
-#request['state'] = {'transactionsCursor': '2018-01-01T00:00:00Z'}
-#request['secrets'] = 'secret'
-#ref = lambda_handler(request, "context")
+if os.environ.get("AWS_EXECUTION_ENV") is None:
+    request = {}
+    request['state'] = {'projectsCursor': '2018-01-01T00:00:00Z'}
+    request['secrets'] = 'secret'
+    ref = lambda_handler(request, "context")
