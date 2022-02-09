@@ -5,7 +5,11 @@ import os
 
 def lambda_handler(request, context):
 
+
     print(request)
+
+    if not request["state"]:
+        request["state"]["projectsCursor"] = "2014-01-01"
 
     # Fetch records using api calls
     (insertTransactions, newTransactionCursor) = api_response(request['state'], request['secrets'])
@@ -36,7 +40,7 @@ def lambda_handler(request, context):
     return response
 
 def api_response(state, secrets):
-
+    print(state['projectsCursor'])
     endpoint = "https://invisodanmark.harvestapp.com/"
     harvest_token ="639717.pt.YhyRXRe9At65SHz0YJNrIEV0yuSVUBfUPpmRGZLKR6XuoAyWFWEnuNlPniiqspwSCfX6EqfuNK80-bGTGinROA"
     headers = {
@@ -71,6 +75,7 @@ def api_response(state, secrets):
 
 if os.environ.get("AWS_EXECUTION_ENV") is None:
     request = {}
-    request['state'] = {'projectsCursor': '2018-01-01T00:00:00Z'}
+    #request['state'] = {'projectsCursor': '2018-01-01T00:00:00Z'}
+    request['state'] = {}
     request['secrets'] = 'secret'
     ref = lambda_handler(request, "context")
