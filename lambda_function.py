@@ -60,7 +60,7 @@ def api_response(state, secrets):
 
     # Do we see a page parameter? Otherwise 1
     if "page" not in state:
-        state["page"] = "1"
+        state["page"] = 1
 
     # Do we see a updated_since parameter? Otherwise 2014
     if "cursor" not in state:
@@ -70,7 +70,8 @@ def api_response(state, secrets):
         state["temp_cursor"] = state["cursor"]
 
 
-    url = "https://api.harvestapp.com/v2/projects?page="+state["page"]+"&updated_since="+state["cursor"]
+    url = "https://api.harvestapp.com/v2/projects?page="+str(state["page"])+"&updated_since="+state["cursor"]
+    print(url)
     response = requests.request("GET", url, headers=headers, data=payload)
 
     data  = response.json()
