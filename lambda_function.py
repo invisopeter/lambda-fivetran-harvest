@@ -2,9 +2,12 @@ import json
 import requests
 import pprint
 import os
+import configparser
+
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 def lambda_handler(request, context):
-
 
     print(request)
 
@@ -39,17 +42,8 @@ def lambda_handler(request, context):
 
 def api_response(state, secrets):
 
-
-    # CONFIG
-
-    #if not request["state"]:
-    #    request["state"]["projectsCursor"] = "2014-01-01"
-    updated_since = "2014-01-01" #request["state"]["projectsCursor"]
-    #print(state['projectsCursor'])
-    endpoint = "https://invisodanmark.harvestapp.com/"
-    harvest_token ="639717.pt.YhyRXRe9At65SHz0YJNrIEV0yuSVUBfUPpmRGZLKR6XuoAyWFWEnuNlPniiqspwSCfX6EqfuNK80-bGTGinROA"
     headers = {
-        'authorization': "Bearer " + harvest_token,
+        'authorization': "Bearer " + config["harvest"]["token"],
         'content-type': "application/json",
         'accept': "application/json",
         'User-Agent': 'Harvest API Example',
@@ -70,7 +64,7 @@ def api_response(state, secrets):
         state["temp_cursor"] = state["cursor"]
 
 
-    url = "https://api.harvestapp.com/v2/projects?page="+str(state["page"])+"&updated_since="+state["cursor"]
+    url = config["harvest"]["endpoint"]+"/projects?page="+str(state["page"])+"&updated_since="+state["cursor"]
     print(url)
     response = requests.request("GET", url, headers=headers, data=payload)
 
