@@ -4,6 +4,8 @@ import pprint
 
 def lambda_handler(request, context):
 
+    print(request)
+    
     # Fetch records using api calls
     (insertTransactions, newTransactionCursor) = api_response(request['state'], request['secrets'])
     # Populate records in insert
