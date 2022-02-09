@@ -8,22 +8,20 @@ def lambda_handler(request, context):
 
     print(request)
 
-    if not request["state"]:
-        request["state"]["projectsCursor"] = "2014-01-01"
-
     # Fetch records using api calls
-    (insertTransactions, newTransactionCursor) = api_response(request['state'], request['secrets'])
+    (insertTransactions, newState, hasMore) = api_response(request['state'], request['secrets'])
     # Populate records in insert
 
     insert = {}
     insert['projects'] = insertTransactions
-    state = {}
-    state['projectsCursor'] = newTransactionCursor
 
     schema = {}
     transactionsSchema = {}
     transactionsSchema['primary_key'] = ['id']
     schema['projects'] = transactionsSchema
+
+    state = {}
+    state =  newState
 
     response = {}
     # Add updated state to response
@@ -33,14 +31,21 @@ def lambda_handler(request, context):
     # Add schema defintion in response
     response['schema'] = schema
     # Add hasMore flag
-    response['hasMore'] = 'false'
+    response['hasMore'] = hasMore
 
     #print(json.dumps(response, indent=4, sort_keys=True))
 
     return response
 
 def api_response(state, secrets):
-    print(state['projectsCursor'])
+
+
+    # CONFIG
+
+    #if not request["state"]:
+    #    request["state"]["projectsCursor"] = "2014-01-01"
+    updated_since = "2014-01-01" #request["state"]["projectsCursor"]
+    #print(state['projectsCursor'])
     endpoint = "https://invisodanmark.harvestapp.com/"
     harvest_token ="639717.pt.YhyRXRe9At65SHz0YJNrIEV0yuSVUBfUPpmRGZLKR6XuoAyWFWEnuNlPniiqspwSCfX6EqfuNK80-bGTGinROA"
     headers = {
@@ -53,13 +58,37 @@ def api_response(state, secrets):
 
     payload={}
 
-    url = "https://api.harvestapp.com/v2/projects?updated_since="+state['projectsCursor']
+    # Do we see a page parameter? Otherwise 1
+    if "page" not in state:
+        state["page"] = "1"
+
+    # Do we see a updated_since parameter? Otherwise 2014
+    if "cursor" not in state:
+        state["cursor"] = "2014-01-01T00:00:00Z"
+
+    if "temp_cursor" not in state:
+        state["temp_cursor"] = state["cursor"]
+
+
+    url = "https://api.harvestapp.com/v2/projects?page="+state["page"]+"&updated_since="+state["cursor"]
     response = requests.request("GET", url, headers=headers, data=payload)
 
     data  = response.json()
     data_content = data["projects"]
+    data_next_page = data["next_page"]
 
-    maxs = max(data_content, key=lambda ev: ev['updated_at'])["updated_at"]
+    max_updated_at = max(data_content, key=lambda ev: ev['updated_at'])["updated_at"]
+
+    if data_next_page:
+        state["page"] = data_next_page
+        state["temp_cursor"] = max(max_updated_at,state["temp_cursor"])
+        hasMore = "true"
+    else:
+        state["page"] = 1
+        state["cursor"] = max(max_updated_at,state["temp_cursor"])
+        hasMore = "false"
+
+    #print(json.dumps(data, indent=4, sort_keys=True))
 
     data_content = [dict(
         id=k1["id"],
@@ -68,11 +97,9 @@ def api_response(state, secrets):
         created_at=k1["created_at"]
     ) for k1 in data_content]
 
-    #print(json.dumps(data_content, indent=4, sort_keys=True))
-
     insertTransactions = data_content
 
-    return (insertTransactions, '2018-01-01T00:00:00Z')
+    return (insertTransactions, state, hasMore)
 
 if os.environ.get("AWS_EXECUTION_ENV") is None:
     request = {}
