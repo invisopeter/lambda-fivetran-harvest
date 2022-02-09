@@ -4,7 +4,7 @@ import pprint
 
 def lambda_handler(request, context):
 
-    print(json.dumps(request, indent=4, sort_keys=True))
+    print(request)
 
     # Fetch records using api calls
     (insertTransactions, newTransactionCursor) = api_response(request['state'], request['secrets'])
@@ -68,5 +68,4 @@ def api_response(state, secrets):
 #request = {}
 #request['state'] = {'transactionsCursor': '2018-01-01T00:00:00Z'}
 #request['secrets'] = 'secret'
-
 #ref = lambda_handler(request, "context")
