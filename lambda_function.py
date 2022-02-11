@@ -9,14 +9,15 @@ config.read('config.ini')
 
 targets = {
   "projects": {
-    "path":"projects",
-    "primary_key":['id'],
-    "columns":['id','name','updated_at','created_at'],
-    "cursor":"2014-01-01T00:00:00Z", #default
-    "page": 1, #default
+    "path": "projects",
+    "primary_key": ['id'],
+    "columns": ['id', 'name', 'updated_at', 'created_at'],
+    "cursor": "2014-01-01T00:00:00Z",  # default
+    "page": 1,  # default
     "insert": {}
   }
 }
+
 
 def lambda_handler(request, context):
 
@@ -37,9 +38,9 @@ def lambda_handler(request, context):
     print(dump(targets))
     exit()
 
-
     # Fetch records using api calls
-    (insertTransactions, newState, hasMore) = api_response(request['state'], request['secrets'])
+    (insertTransactions, newState, hasMore) = api_response(
+        request['state'], request['secrets'])
     # Populate records in insert
 
     insert = {}
@@ -51,11 +52,11 @@ def lambda_handler(request, context):
     schema['projects'] = transactionsSchema
 
     state = {}
-    state =  newState
+    state = newState
 
     response = {}
     # Add updated state to response
-    response['state'] =  state
+    response['state'] = state
     # Add all the records to be inserted in response
     response['insert'] = insert
     # Add schema defintion in response
@@ -67,10 +68,11 @@ def lambda_handler(request, context):
 
     return response
 
+
 def get_updates(target, state):
 
+    return ({}, {}, {})
 
-    return ({},{},{})
 
 def api_response(state, secrets):
 
@@ -82,7 +84,7 @@ def api_response(state, secrets):
         'Harvest-Account-ID': '586549'
     }
 
-    payload={}
+    payload = {}
 
     # Do we see a page parameter? Otherwise 1
     if "page" not in state:
@@ -95,27 +97,28 @@ def api_response(state, secrets):
     if "temp_cursor" not in state:
         state["temp_cursor"] = state["cursor"]
 
-
-    url = config["harvest"]["endpoint"]+"/projects?page="+str(state["page"])+"&updated_since="+state["cursor"]
+    url = config["harvest"]["endpoint"]+"/projects?page=" + \
+        str(state["page"])+"&updated_since="+state["cursor"]
     print(url)
     response = requests.request("GET", url, headers=headers, data=payload)
 
-    data  = response.json()
+    data = response.json()
     data_content = data["projects"]
     data_next_page = data["next_page"]
 
     if data_content:
-        max_updated_at = max(data_content, key=lambda ev: ev['updated_at'])["updated_at"]
+        max_updated_at = max(data_content, key=lambda ev: ev['updated_at'])[
+                             "updated_at"]
     else:
         max_updated_at = state["cursor"]
 
     if data_next_page:
         state["page"] = data_next_page
-        state["temp_cursor"] = max(max_updated_at,state["temp_cursor"])
+        state["temp_cursor"] = max(max_updated_at, state["temp_cursor"])
         hasMore = "true"
     else:
         state["page"] = 1
-        state["cursor"] = max(max_updated_at,state["temp_cursor"])
+        state["cursor"] = max(max_updated_at, state["temp_cursor"])
         hasMore = "false"
 
     #print(json.dumps(data, indent=4, sort_keys=True))
@@ -130,6 +133,7 @@ def api_response(state, secrets):
     insertTransactions = data_content
 
     return (insertTransactions, state, hasMore)
+
 
 def dump(response):
     return json.dumps(response, indent=4, sort_keys=True)
@@ -151,9 +155,11 @@ def dict_merge(dct, merge_dct):
         else:
             dct[k] = merge_dct[k]
 
+
 if os.environ.get("AWS_EXECUTION_ENV") is None:
     request = {}
-    request['state'] = {"projects": {'cursor': '2022-02-08T20:56:27Z', 'page' :4}}
+    request['state'] = {"projects": {
+        'cursor': '2022-02-08T20:56:27Z', 'page': 4}}
     #request['state'] = {}
     #request['secrets'] = 'secret'
     ref = lambda_handler(request, "context")
